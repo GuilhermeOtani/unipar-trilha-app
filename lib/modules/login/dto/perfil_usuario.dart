@@ -7,6 +7,12 @@ enum PerfilUsuario {
 
   final String apiValue;
 
+  String get label => switch (this) {
+    PerfilUsuario.administrador => 'Administrador',
+    PerfilUsuario.professor => 'Professor',
+    PerfilUsuario.aluno => 'Aluno',
+  };
+
   static PerfilUsuario fromJson(Object? value) {
     return PerfilUsuario.values.firstWhere(
       (perfil) => perfil.apiValue == value,

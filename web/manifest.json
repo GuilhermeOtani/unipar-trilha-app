@@ -1,6 +1,6 @@
 {
-    "name": "unipar_trilha_app",
-    "short_name": "unipar_trilha_app",
+    "name": "Trail Code",
+    "short_name": "Trail Code",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

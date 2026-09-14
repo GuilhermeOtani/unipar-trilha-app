@@ -6,7 +6,11 @@ import 'package:unipar_trilha_app/core/constants_api.dart';
 import 'package:unipar_trilha_app/modules/login/dto/login_request.dart';
 import 'package:unipar_trilha_app/modules/login/dto/login_response.dart';
 
-class LoginService {
+abstract interface class LoginServiceContract {
+  Future<LoginResponse> efetuarLogin(LoginRequest request);
+}
+
+class LoginService implements LoginServiceContract {
   LoginService({Dio? dio, AuthSession? authSession})
     : _dio = dio ?? ApiClient.shared.dio,
       _authSession = authSession ?? AuthSession.instance;
@@ -14,6 +18,7 @@ class LoginService {
   final Dio _dio;
   final AuthSession _authSession;
 
+  @override
   Future<LoginResponse> efetuarLogin(LoginRequest request) async {
     try {
       final response = await _dio.post<Object?>(
