@@ -2,7 +2,7 @@
 
 Fundação Flutter do sistema **Unipar Trilha**, organizada pelo mesmo padrão modular do GulaPay e adaptada ao domínio e aos contratos reais deste projeto.
 
-Esta entrega contém somente o esqueleto, a comunicação HTTP e a autenticação sem interface. Ainda não existem telas de login, home, autoria, prática ou acompanhamento, nem identidade visual.
+Esta entrega contém o esqueleto, a comunicação HTTP, a autenticação sem interface e o design system (FE-002). As telas do aluno dos wireframes (home, catálogo, caminho, prática e perfil) existem e rodam na pré-visualização; catálogo e prática já consomem os contratos do backend por services. Ainda não existem telas de login, autoria ou acompanhamento. Detalhes do design system em [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md).
 
 ## Estado da implementação
 
@@ -11,8 +11,11 @@ Esta entrega contém somente o esqueleto, a comunicação HTTP e a autenticaçã
 | 1.1 | Projeto Android/Web, estrutura modular e configuração | concluído |
 | 1.2 técnico | Cliente HTTP, health, DTO e service de login | concluído sem tela |
 | 1.3 técnico | Persistência, restauração, invalidação e logout | concluído sem navegação |
-| Telas e design system | Aguardam elementos visuais e cores | não iniciado |
-| Módulos de negócio | Trilha, distribuição, catálogo, prática e painel | não iniciado |
+| FE-002 | Design system: tokens, tema, ativos e widgets compartilhados | concluído |
+| Telas do aluno | Home, catálogo, caminho, prática e perfil (wireframes 1–7) | layout pronto, visível em `main_preview.dart` |
+| 3.2 / 4.1–4.3 técnico | DTOs e services de catálogo e aprendizagem, estados de carregamento/erro | concluído sem aceite integrado |
+| Telas restantes | Login, home do professor, autoria e acompanhamento | não iniciado |
+| Módulos de negócio | Trilha, distribuição e painel | não iniciado |
 
 Isso não conclui as etapas funcionais 1.1–1.3 do plano: o aceite visual e a integração pela interface serão realizados nos tickets seguintes.
 
@@ -36,8 +39,8 @@ lib/
 │   ├── auth_session.dart
 │   ├── constants_api.dart
 │   ├── health_service.dart
-│   ├── theme/
-│   └── widgets/
+│   ├── theme/          # tokens e ThemeData (FE-002)
+│   └── widgets/        # componentes visuais compartilhados (FE-002)
 ├── modules/
 │   ├── login/
 │   │   ├── dto/
@@ -48,9 +51,18 @@ lib/
 │   ├── distribuicao/
 │   ├── catalogo_aluno/
 │   ├── aprendizagem/
-│   └── acompanhamento/
-└── shared/
+│   ├── acompanhamento/
+│   └── perfil/                  # tela 7 (FE-002)
+├── shared/
+│   ├── models/ e widgets/       # cabeçalho do aluno usado por várias telas
+│   └── preview/                 # conteúdo de exemplo das telas
+└── main_preview.dart            # pré-visualização das telas 1–7
+
+assets/images/                   # ícones, ilustrações e mascote do kit
+assets/fonts/                    # Inter, Montserrat, Open Sans, Fira Code e Fredoka (OFL)
 ```
+
+As telas dos wireframes ficam em `modules/<módulo>/page/`; a navegação do aluno está em `modules/home/page/aluno_navegacao_page.dart`. Veja o mapa completo em [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md).
 
 Pastas vazias possuem `.gitkeep`. Os módulos de negócio foram apenas reservados; nenhum contrato foi antecipado neles.
 
@@ -76,6 +88,10 @@ Rotas implementadas na fundação:
 | `GET` | `/actuator/health` | confirma `status=UP` |
 | `POST` | `/auth/login` | autentica e persiste a sessão |
 | `GET` | `/usuarios/me` | valida uma sessão restaurada |
+| `GET` | `/aluno/distribuicoes` | catálogo do aluno (`CatalogoAlunoService`) |
+| `POST` | `/aluno/distribuicoes/{id}/sessoes` | inicia ou retoma a prática (`AprendizagemService`) |
+| `GET` | `/aluno/sessoes/{id}` | consulta a sessão (`AprendizagemService`) |
+| `POST` | `/aluno/sessoes/{id}/respostas` | envia a resposta uma única vez (`AprendizagemService`) |
 
 O token não é enviado no health ou no login. A senha é enviada apenas ao endpoint de login e nunca é persistida.
 
@@ -135,8 +151,8 @@ O teste executa health → login → `/usuarios/me` → logout. Sem essas opçõ
 
 ## Decisões e próximos passos
 
-- O `MaterialApp` inicial é propositalmente vazio; não representa uma tela pronta.
-- Não foram adicionados mocks em `lib/`, dependências extras, assets ou regras do GulaPay.
+- O `MaterialApp` inicial é propositalmente vazio; as telas do aluno serão ligadas a ele depois do login (etapa 1.2), com `AlunoNavegacaoPage(conteudo: ...)` usando os services reais.
+- A única simulação em `lib/` é `shared/preview/aluno_preview_api.dart`, que responde com o JSON dos contratos e só é usada por `main_preview.dart` e pelos testes, nunca por `main.dart`. Não foram adicionadas dependências extras nem regras do GulaPay.
 - O plano original está em `PLANO_IMPLEMENTACAO_FRONTEND.md` neste repositório.
 - O próximo incremento deve aplicar o design system e construir login/navegação sobre esta base.
 - Para reencontrar rascunhos e versões em qualquer dispositivo, a decisão FE-005 adotada exige endpoints autenticados adicionais no backend. Essa alteração permanece separada desta fundação.

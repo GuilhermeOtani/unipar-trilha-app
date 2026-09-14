@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:unipar_trilha_app/core/auth_session.dart';
+import 'package:unipar_trilha_app/core/theme/app_theme.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,6 +13,10 @@ class UniparTrilhaApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(title: 'Unipar Trilha', home: SizedBox.shrink());
+    return MaterialApp(
+      title: 'Unipar Trilha',
+      theme: AppTheme.dark,
+      home: const SizedBox.shrink(),
+    );
   }
 }
