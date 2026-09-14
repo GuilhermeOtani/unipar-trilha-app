@@ -29,7 +29,6 @@ class _LoginPageState extends State<LoginPage> {
   final _loginController = TextEditingController();
   final _passwordController = TextEditingController();
   late final LoginServiceContract _service;
-  bool _passwordVisible = false;
   bool _loading = false;
   String? _errorMessage;
 
@@ -136,29 +135,14 @@ class _LoginPageState extends State<LoginPage> {
                 label: 'Senha',
                 hint: 'Digite sua senha',
                 prefixIcon: const Icon(Icons.lock_outline, size: 21),
-                suffixIcon: IconButton(
-                  key: const Key('password-visibility'),
-                  tooltip: _passwordVisible ? 'Ocultar senha' : 'Mostrar senha',
-                  onPressed: _loading
-                      ? null
-                      : () => setState(
-                          () => _passwordVisible = !_passwordVisible,
-                        ),
-                  icon: Icon(
-                    _passwordVisible
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
-                    size: 21,
-                  ),
-                ),
-                obscureText: !_passwordVisible,
+                obscureText: true,
                 enabled: !_loading,
                 textInputAction: TextInputAction.done,
                 autofillHints: const [AutofillHints.password],
                 validator: (value) => value == null || value.isEmpty
                     ? 'Informe sua senha.'
                     : null,
-                onFieldSubmitted: (_) => _submit(),
+                onSubmitted: (_) => _submit(),
               ),
               const SizedBox(height: 26),
               AppPrimaryButton(

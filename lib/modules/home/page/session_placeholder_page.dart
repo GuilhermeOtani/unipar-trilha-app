@@ -28,14 +28,15 @@ class _SessionPlaceholderPageState extends State<SessionPlaceholderPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final usuario = widget.authSession.state.usuario!;
     return AuthShell(
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             Icons.check_circle_outline_rounded,
-            color: AppColors.iconSuccess,
+            color: colors.feedbackSuccessIcon,
             size: 52,
           ),
           const SizedBox(height: 20),
@@ -57,7 +58,7 @@ class _SessionPlaceholderPageState extends State<SessionPlaceholderPage> {
             key: const Key('authenticated-user-profile'),
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.actionPrimary),
+            ).textTheme.bodyMedium?.copyWith(color: colors.actionPrimary),
           ),
           const SizedBox(height: 22),
           const Text(

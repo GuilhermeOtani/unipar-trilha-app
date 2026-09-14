@@ -17,6 +17,7 @@ class AppPrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final action = loading ? null : onPressed;
     return Semantics(
       button: true,
@@ -27,14 +28,12 @@ class AppPrimaryButton extends StatelessWidget {
         child: FilledButton(
           onPressed: action,
           style: FilledButton.styleFrom(
-            backgroundColor: AppColors.actionPrimary,
-            foregroundColor: AppColors.textOnAction,
-            disabledBackgroundColor: AppColors.actionPrimary.withValues(
+            backgroundColor: colors.actionPrimary,
+            foregroundColor: colors.onAction,
+            disabledBackgroundColor: colors.actionPrimary.withValues(
               alpha: 0.42,
             ),
-            disabledForegroundColor: AppColors.textOnAction.withValues(
-              alpha: 0.64,
-            ),
+            disabledForegroundColor: colors.onAction.withValues(alpha: 0.64),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
@@ -44,11 +43,11 @@ class AppPrimaryButton extends StatelessWidget {
             ),
           ),
           child: loading
-              ? const SizedBox.square(
+              ? SizedBox.square(
                   dimension: 22,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
-                    color: AppColors.textOnAction,
+                    color: colors.onAction,
                   ),
                 )
               : Row(

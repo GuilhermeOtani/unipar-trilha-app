@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:unipar_trilha_app/core/auth_session.dart';
-import 'package:unipar_trilha_app/core/theme/app_colors.dart';
 import 'package:unipar_trilha_app/modules/home/page/session_placeholder_page.dart';
 import 'package:unipar_trilha_app/modules/login/page/login_page.dart';
 import 'package:unipar_trilha_app/modules/login/service/login_service.dart';
@@ -73,9 +72,7 @@ class _SessionLoadingPage extends StatelessWidget {
       body: Center(
         child: Semantics(
           label: 'Validando sessão',
-          child: const CircularProgressIndicator(
-            color: AppColors.actionPrimary,
-          ),
+          child: const CircularProgressIndicator(),
         ),
       ),
     );

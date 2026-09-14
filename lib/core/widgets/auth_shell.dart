@@ -9,13 +9,14 @@ class AuthShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Scaffold(
       body: DecoratedBox(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [AppColors.backgroundApp, AppColors.plum],
+            colors: [colors.backgroundApp, colors.surfaceHeaderShade],
           ),
         ),
         child: SafeArea(
@@ -97,16 +98,17 @@ class _AuthCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        color: AppColors.surfaceDefault,
+        color: colors.surfaceDefault,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppColors.blue.withValues(alpha: 0.72)),
+        border: Border.all(color: colors.borderCard),
         boxShadow: [
           BoxShadow(
-            color: AppColors.backgroundApp.withValues(alpha: 0.5),
+            color: colors.shadowStrong.withValues(alpha: 0.5),
             blurRadius: 32,
             offset: const Offset(0, 18),
           ),
@@ -133,7 +135,7 @@ class _AuthHero extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Image.asset(
-                  'assets/mascot/iguana-phone.png',
+                  'assets/images/mascot/iguana-phone.png',
                   height: imageHeight,
                   fit: BoxFit.contain,
                 ),
@@ -146,7 +148,7 @@ class _AuthHero extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Image.asset(
-                  'assets/mascot/iguana-phone.png',
+                  'assets/images/mascot/iguana-phone.png',
                   height: imageHeight,
                   width: double.infinity,
                   alignment: Alignment.centerLeft,
@@ -167,6 +169,7 @@ class _BrandText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -182,7 +185,7 @@ class _BrandText extends StatelessWidget {
           'Aprenda, pratique e acompanhe sua evolução.',
           style: Theme.of(
             context,
-          ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
+          ).textTheme.bodyLarge?.copyWith(color: colors.textSecondary),
         ),
       ],
     );

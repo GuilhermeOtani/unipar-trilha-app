@@ -2,7 +2,7 @@
 
 Frontend Flutter do **Trail Code**, organizado pelo mesmo padrão modular do GulaPay e adaptado ao domínio, ao design system e aos contratos reais deste projeto.
 
-Esta entrega contém a fundação técnica e a jornada visual de login. O cadastro permanece fora do escopo. As homes definitivas, autoria, distribuição, prática e acompanhamento ainda não foram implementados.
+Esta entrega reúne a fundação técnica, a jornada visual de login, o design system (FE-002) e as telas do aluno dos wireframes (home, catálogo, caminho, prática e perfil). Catálogo e prática já consomem os contratos do backend por services. O cadastro, a home do professor, a autoria e o acompanhamento permanecem fora do escopo.
 
 ## Estado da implementação
 
@@ -11,9 +11,11 @@ Esta entrega contém a fundação técnica e a jornada visual de login. O cadast
 | 1.1 | Projeto Android/Web, estrutura modular e configuração | concluído |
 | 1.2 | Cliente HTTP, health, DTO, service e tela de login | concluído em código |
 | 1.3 | Persistência, `AuthGate`, restauração, invalidação e logout | concluído com página temporária |
-| Design system | Tema e componentes necessários ao login | parcialmente concluído |
+| FE-002 | Design system: tokens, tema, ativos e widgets compartilhados | concluído |
+| Telas do aluno | Home, catálogo, caminho, prática e perfil (wireframes 1–7) | layout pronto, visível em `main_preview.dart` |
+| 3.2 / 4.1–4.3 técnico | DTOs e services de catálogo e aprendizagem, estados de carregamento/erro | concluído sem aceite integrado |
 | Cadastro | Não faz parte desta entrega | fora do escopo |
-| Módulos de negócio | Trilha, distribuição, catálogo, prática e painel | não iniciado |
+| Módulos restantes | Autoria, distribuição, painel e home do professor | não iniciado |
 
 A tela utiliza a API real em produção. A validação automatizada usa serviços simulados somente em `test/`; a execução opcional contra o backend real permanece pendente quando a API local não estiver ligada.
 
@@ -37,14 +39,8 @@ lib/
 │   ├── auth_session.dart
 │   ├── constants_api.dart
 │   ├── health_service.dart
-│   ├── theme/
-│   │   ├── app_colors.dart
-│   │   └── app_theme.dart
-│   └── widgets/
-│       ├── app_message_banner.dart
-│       ├── app_primary_button.dart
-│       ├── app_text_field.dart
-│       └── auth_shell.dart
+│   ├── theme/          # tokens e ThemeData (FE-002)
+│   └── widgets/        # componentes visuais compartilhados
 ├── modules/
 │   ├── login/
 │   │   ├── dto/
@@ -55,8 +51,15 @@ lib/
 │   ├── distribuicao/
 │   ├── catalogo_aluno/
 │   ├── aprendizagem/
-│   └── acompanhamento/
-└── shared/
+│   ├── acompanhamento/
+│   └── perfil/                  # tela 7 (FE-002)
+├── shared/
+│   ├── models/ e widgets/       # cabeçalho do aluno usado por várias telas
+│   └── preview/                 # conteúdo de exemplo das telas
+└── main_preview.dart            # pré-visualização das telas 1–7
+
+assets/images/                   # ícones, ilustrações e mascote do kit
+assets/fonts/                    # fontes OFL usadas pelo design system
 ```
 
 Pastas vazias possuem `.gitkeep`. Os módulos de negócio foram apenas reservados; nenhum contrato foi antecipado neles.
@@ -76,7 +79,7 @@ O `MaterialApp` inicia em um `AuthGate`, que decide entre carregamento, login e 
 
 Após autenticar, uma página propositalmente temporária apresenta nome, perfil e o botão **Sair**. Ela será substituída pelas homes específicas sem alterar o contrato de autenticação.
 
-Os componentes `AppTextField`, `AppPrimaryButton`, `AppMessageBanner` e `AuthShell` foram criados em `core/widgets` para reutilização. O tema usa exclusivamente os tokens recebidos. O único asset copiado para produção foi `assets/mascot/iguana-phone.png`, preservando transparência e proporção; “Trail Code” é texto, não uma logo inventada.
+Os componentes `AppTextField`, `AppPrimaryButton`, `AppMessageBanner` e `AuthShell` ficam em `core/widgets` para reutilização e usam os tokens do design system. O mascote do login é `assets/images/mascot/iguana-phone.png`; “Trail Code” é texto, não uma logo inventada. O mapa completo de tokens, ativos e componentes está em [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md).
 
 ## Comunicação com a API
 
@@ -100,6 +103,10 @@ Rotas implementadas na fundação:
 | `GET` | `/actuator/health` | confirma `status=UP` |
 | `POST` | `/auth/login` | autentica e persiste a sessão |
 | `GET` | `/usuarios/me` | valida uma sessão restaurada |
+| `GET` | `/aluno/distribuicoes` | catálogo do aluno (`CatalogoAlunoService`) |
+| `POST` | `/aluno/distribuicoes/{id}/sessoes` | inicia ou retoma a prática (`AprendizagemService`) |
+| `GET` | `/aluno/sessoes/{id}` | consulta a sessão (`AprendizagemService`) |
+| `POST` | `/aluno/sessoes/{id}/respostas` | envia a resposta (`AprendizagemService`) |
 
 O token não é enviado no health ou no login. A senha é enviada apenas ao endpoint de login e nunca é persistida.
 
@@ -160,10 +167,10 @@ O teste executa health → login → `/usuarios/me` → logout. Sem essas opçõ
 ## Decisões e próximos passos
 
 - **FE-001:** adaptado conforme solicitado; o aplicativo inicia na jornada de autenticação, sem página técnica nem cadastro.
-- **FE-002:** parcialmente realizado pelo tema e pelos componentes compartilhados usados no login. Os componentes dos módulos futuros ainda serão criados quando necessários.
+- **FE-002:** concluído com tokens, tema, ativos e componentes compartilhados; o login foi integrado a esse design system.
 - **FE-003:** login, estados de erro e integração de produção estão implementados. A execução contra a API real segue pendente nesta validação porque o backend local estava desligado.
-- **FE-004:** parcialmente realizado pelo `AuthGate`, restauração, logout e página provisória. As homes de professor e aluno ainda não existem.
-- Não foram adicionados mocks em `lib/`, dependências extras ou regras comerciais do GulaPay.
+- **FE-004:** parcialmente realizado pelo `AuthGate`, restauração, logout e página provisória. As telas do aluno existem em pré-visualização, mas a navegação autenticada por perfil ainda será ligada em incremento posterior.
+- A única simulação em `lib/` é `shared/preview/aluno_preview_api.dart`, usada apenas por `main_preview.dart` e testes. Não foram adicionadas dependências extras nem regras comerciais do GulaPay.
 - O plano original está em `PLANO_IMPLEMENTACAO_FRONTEND.md` neste repositório.
 - O próximo incremento deve substituir a página provisória pelas homes por perfil, preservando o `AuthGate`.
 - Para reencontrar rascunhos e versões em qualquer dispositivo, a decisão FE-005 adotada exige endpoints autenticados adicionais no backend. Essa alteração permanece separada desta fundação.

@@ -19,11 +19,10 @@ class AppMessageBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final error = kind == AppMessageKind.error;
-    final color = error ? AppColors.iconDanger : AppColors.accentInfo;
-    final surface = error
-        ? AppColors.feedbackDangerSurface
-        : AppColors.surfaceBrand;
+    final color = error ? colors.feedbackDangerText : colors.actionInfo;
+    final surface = error ? colors.feedbackDangerSurface : colors.surfaceBrand;
     return Semantics(
       liveRegion: true,
       child: Container(
@@ -47,7 +46,7 @@ class AppMessageBanner extends StatelessWidget {
                 message,
                 style: Theme.of(
                   context,
-                ).textTheme.bodyMedium?.copyWith(color: AppColors.textPrimary),
+                ).textTheme.bodyMedium?.copyWith(color: colors.textPrimary),
               ),
             ),
             if (actionLabel != null && onAction != null)
