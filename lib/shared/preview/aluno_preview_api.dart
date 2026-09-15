@@ -120,6 +120,10 @@ class AlunoPreviewApi implements HttpClientAdapter {
           'totalDesafios': _desafios.length,
           'percentualProgresso': _progresso(id)['percentual'],
           'concluida': _progresso(id)['concluida'],
+          'sessaoId': _acertos.containsKey(id) ? id * 100 : null,
+          'disponivelDe': '2026-01-01T08:00:00',
+          'disponivelAte': null,
+          'prazoEncerrado': false,
         },
     ],
   };

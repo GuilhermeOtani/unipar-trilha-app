@@ -30,6 +30,10 @@ void main() {
           'totalDesafios': 3,
           'percentualProgresso': 33,
           'concluida': false,
+          'sessaoId': 4,
+          'disponivelDe': '2026-09-01T08:00:00',
+          'disponivelAte': null,
+          'prazoEncerrado': false,
         },
       ],
     });

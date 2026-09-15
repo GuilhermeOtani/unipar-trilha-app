@@ -35,7 +35,9 @@ void main() {
     final (dio, adapter) = criar(
       (_) => jsonResponse('''{"distribuicoes": [{
         "distribuicaoId": 9, "trilhaTitulo": "Lógica", "disciplinaNome": "Algoritmos",
-        "numeroVersao": 1, "totalDesafios": 3, "percentualProgresso": 0, "concluida": false
+        "numeroVersao": 1, "totalDesafios": 3, "percentualProgresso": 0, "concluida": false,
+        "sessaoId": null, "disponivelDe": "2026-09-01T08:00:00",
+        "disponivelAte": null, "prazoEncerrado": false
       }]}'''),
     );
 
@@ -44,6 +46,24 @@ void main() {
     expect(adapter.requests.single.method, 'GET');
     expect(adapter.requests.single.path, '/aluno/distribuicoes');
     expect(catalogo.distribuicoes.single.trilhaTitulo, 'Lógica');
+  });
+
+  test('caminho consulta distribuição e não exige resposta correta', () async {
+    final (dio, adapter) = criar(
+      (_) => jsonResponse('''{
+        "distribuicaoId":9,"sessaoId":null,"versaoId":3,"numeroVersao":1,
+        "trilhaTitulo":"Lógica","disciplinaNome":"Algoritmos","percentualProgresso":0,
+        "modulos":[{"id":1,"titulo":"Base","ordem":1,"licoes":[{
+          "id":2,"titulo":"Condicionais","resumo":null,"ordem":1,
+          "totalDesafios":2,"desafiosConcluidos":0,"status":"ATUAL"
+        }]}]
+      }'''),
+    );
+
+    final caminho = await CatalogoAlunoService(dio: dio).buscarCaminho(9);
+
+    expect(adapter.requests.single.path, '/aluno/distribuicoes/9/caminho');
+    expect(caminho.modulos.single.licoes.single.titulo, 'Condicionais');
   });
 
   test('catálogo converte Problem Details em ApiError', () async {

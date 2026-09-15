@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:unipar_trilha_app/core/auth_session.dart';
 import 'package:unipar_trilha_app/main.dart';
-import 'package:unipar_trilha_app/modules/home/page/session_placeholder_page.dart';
+import 'package:unipar_trilha_app/modules/home/page/aluno_navegacao_page.dart';
+import 'package:unipar_trilha_app/modules/home/page/professor_navegacao_page.dart';
 import 'package:unipar_trilha_app/modules/login/dto/login_response.dart';
 import 'package:unipar_trilha_app/modules/login/dto/perfil_usuario.dart';
 import 'package:unipar_trilha_app/modules/login/dto/usuario_response.dart';
 import 'package:unipar_trilha_app/modules/login/page/login_page.dart';
+import 'package:unipar_trilha_app/modules/usuarios/page/administrador_home_page.dart';
 
 import 'support/fake_http_client_adapter.dart';
 import 'support/fake_login_service.dart';
@@ -20,7 +22,7 @@ void main() {
   );
 
   for (final perfil in PerfilUsuario.values) {
-    testWidgets('login de ${perfil.apiValue} abre a página provisória', (
+    testWidgets('login de ${perfil.apiValue} abre a área correta', (
       tester,
     ) async {
       final storage = MemoryAuthStorage();
@@ -50,9 +52,12 @@ void main() {
       await tester.tap(find.byKey(const Key('login-submit')));
       await tester.pumpAndSettle();
 
-      expect(find.byType(SessionPlaceholderPage), findsOneWidget);
-      expect(find.text(response.nome), findsOneWidget);
-      expect(find.text(perfil.label), findsOneWidget);
+      final tipoEsperado = switch (perfil) {
+        PerfilUsuario.administrador => AdministradorHomePage,
+        PerfilUsuario.professor => ProfessorNavegacaoPage,
+        PerfilUsuario.aluno => AlunoNavegacaoPage,
+      };
+      expect(find.byType(tipoEsperado), findsOneWidget);
     });
   }
 
@@ -84,8 +89,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byType(SessionPlaceholderPage), findsOneWidget);
-    expect(find.text('Professor Atualizado'), findsOneWidget);
+    expect(find.byType(ProfessorNavegacaoPage), findsOneWidget);
   });
 
   testWidgets('falha de rede na restauração mostra aviso e nova tentativa', (
@@ -141,11 +145,11 @@ void main() {
       UniparTrilhaApp(authSession: session, loginService: FakeLoginService()),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('session-logout')));
+    await session.logout();
     await tester.pumpAndSettle();
 
     expect(find.byType(LoginPage), findsOneWidget);
-    expect(find.byType(SessionPlaceholderPage), findsNothing);
+    expect(find.byType(ProfessorNavegacaoPage), findsNothing);
     expect(storage.value, isNull);
   });
 }

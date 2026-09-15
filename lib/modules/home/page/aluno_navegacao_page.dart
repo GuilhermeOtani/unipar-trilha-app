@@ -1,51 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:unipar_trilha_app/core/api_error.dart';
+import 'package:unipar_trilha_app/core/auth_session.dart';
 import 'package:unipar_trilha_app/core/theme/app_assets.dart';
 import 'package:unipar_trilha_app/core/widgets/app_bottom_navigation.dart';
 import 'package:unipar_trilha_app/core/widgets/app_empty_state.dart';
 import 'package:unipar_trilha_app/core/widgets/app_page.dart';
 import 'package:unipar_trilha_app/core/widgets/app_shell.dart';
+import 'package:unipar_trilha_app/modules/aprendizagem/models/caminho_trilha.dart';
+import 'package:unipar_trilha_app/modules/aprendizagem/page/caminho_trilha_api_page.dart';
 import 'package:unipar_trilha_app/modules/aprendizagem/page/caminho_trilha_page.dart';
 import 'package:unipar_trilha_app/modules/aprendizagem/page/sessao_pratica_page.dart';
 import 'package:unipar_trilha_app/modules/aprendizagem/service/aprendizagem_service.dart';
+import 'package:unipar_trilha_app/modules/catalogo_aluno/dto/catalogo_aluno_response.dart';
 import 'package:unipar_trilha_app/modules/catalogo_aluno/models/trilha_resumo.dart';
 import 'package:unipar_trilha_app/modules/catalogo_aluno/page/catalogo_aluno_page.dart';
 import 'package:unipar_trilha_app/modules/catalogo_aluno/service/catalogo_aluno_service.dart';
 import 'package:unipar_trilha_app/modules/home/models/aluno_conteudo.dart';
 import 'package:unipar_trilha_app/modules/home/models/home_aluno.dart';
 import 'package:unipar_trilha_app/modules/home/page/aluno_home_page.dart';
+import 'package:unipar_trilha_app/modules/login/dto/usuario_response.dart';
+import 'package:unipar_trilha_app/modules/perfil/page/perfil_conta_page.dart';
 import 'package:unipar_trilha_app/modules/perfil/page/perfil_page.dart';
+import 'package:unipar_trilha_app/shared/models/aluno_resumo.dart';
 import 'package:unipar_trilha_app/shared/widgets/aluno_header.dart';
 
 enum AbaAluno { inicio, desempenho, trilhas, perfil }
 
-/// Navegação do aluno: `AppShell` + navegação inferior com quatro abas.
-///
-/// | Aba | Ícone | Telas |
-/// |---|---|---|
-/// | Início | casa | 1 |
-/// | Desempenho | barras | sem wireframe (estado vazio) |
-/// | Trilhas | livro | 3 → 2 → 4/5/6 (pilha própria) |
-/// | Perfil | menu | 7 |
-///
-/// Carrega o catálogo com `CatalogoAlunoService` (home e aba Trilhas usam a
-/// mesma lista) e abre a prática com `SessaoPraticaPage`. Os services são
-/// opcionais para testes e pré-visualização; em execução normal usam a API.
-///
-/// A aba Trilhas tem um `Navigator` interno para manter a navegação inferior
-/// visível no caminho e na prática, como nos wireframes.
+/// Navegação autenticada do aluno. [conteudo] existe somente para o preview;
+/// em produção a identidade e todos os dados acadêmicos vêm da API.
 class AlunoNavegacaoPage extends StatefulWidget {
   const AlunoNavegacaoPage({
     super.key,
-    required this.conteudo,
+    this.conteudo,
+    this.usuario,
+    this.authSession,
     this.catalogoService,
     this.aprendizagemService,
-  });
+  }) : assert(conteudo != null || (usuario != null && authSession != null));
 
-  final AlunoConteudo conteudo;
-  final CatalogoAlunoService? catalogoService;
-  final AprendizagemService? aprendizagemService;
+  final AlunoConteudo? conteudo;
+  final UsuarioResponse? usuario;
+  final AuthSession? authSession;
+  final CatalogoAlunoServiceContract? catalogoService;
+  final AprendizagemServiceContract? aprendizagemService;
 
   static const destinos = [
     AppNavigationDestination(
@@ -76,18 +74,29 @@ class AlunoNavegacaoPage extends StatefulWidget {
 
 class _AlunoNavegacaoPageState extends State<AlunoNavegacaoPage> {
   final _trilhasNavigator = GlobalKey<NavigatorState>();
-  late final CatalogoAlunoService _catalogoService =
+  late final CatalogoAlunoServiceContract _catalogoService =
       widget.catalogoService ?? CatalogoAlunoService();
-  late final AprendizagemService _aprendizagemService =
+  late final AprendizagemServiceContract _aprendizagemService =
       widget.aprendizagemService ?? AprendizagemService();
 
   AbaAluno _aba = AbaAluno.inicio;
   List<TrilhaResumo> _trilhas = const [];
   bool _carregandoTrilhas = true;
   String? _erroTrilhas;
+  ProximaLicao? _proximaLicao;
   int _carregamento = 0;
 
-  AlunoConteudo get _conteudo => widget.conteudo;
+  AlunoConteudo? get _conteudo => widget.conteudo;
+  AlunoResumo get _aluno {
+    if (_conteudo != null) return _conteudo!.aluno;
+    final usuario = widget.usuario!;
+    return AlunoResumo(
+      nome: usuario.nome,
+      ra: usuario.login,
+      rotuloIdentificacao: 'Login',
+    );
+  }
+
   NavigatorState get _pilhaTrilhas => _trilhasNavigator.currentState!;
 
   @override
@@ -96,7 +105,6 @@ class _AlunoNavegacaoPageState extends State<AlunoNavegacaoPage> {
     _carregarTrilhas();
   }
 
-  /// Busca o catálogo; uma resposta atrasada de chamada anterior é ignorada.
   Future<void> _carregarTrilhas() async {
     final operacao = ++_carregamento;
     setState(() {
@@ -106,12 +114,17 @@ class _AlunoNavegacaoPageState extends State<AlunoNavegacaoPage> {
     try {
       final catalogo = await _catalogoService.listar();
       if (!mounted || operacao != _carregamento) return;
+      final trilhas = [
+        for (final (indice, item) in catalogo.distribuicoes.indexed)
+          TrilhaResumo.fromDistribuicao(item, indice: indice),
+      ];
       setState(() {
-        _trilhas = [
-          for (final (indice, item) in catalogo.distribuicoes.indexed)
-            TrilhaResumo.fromDistribuicao(item, indice: indice),
-        ];
+        _trilhas = trilhas;
+        _proximaLicao = _conteudo?.proximaLicao;
       });
+      if (_conteudo == null) {
+        await _carregarProximaLicao(catalogo.distribuicoes, trilhas, operacao);
+      }
     } on ApiError catch (error) {
       if (mounted && operacao == _carregamento) {
         setState(() => _erroTrilhas = error.message);
@@ -119,6 +132,37 @@ class _AlunoNavegacaoPageState extends State<AlunoNavegacaoPage> {
     } finally {
       if (mounted && operacao == _carregamento) {
         setState(() => _carregandoTrilhas = false);
+      }
+    }
+  }
+
+  Future<void> _carregarProximaLicao(
+    List<DistribuicaoAlunoResponse> distribuicoes,
+    List<TrilhaResumo> trilhas,
+    int operacao,
+  ) async {
+    for (final item in distribuicoes.where((item) => !item.concluida)) {
+      try {
+        final response = await _catalogoService.buscarCaminho(
+          item.distribuicaoId,
+        );
+        if (!mounted || operacao != _carregamento) return;
+        final trilha = trilhas.firstWhere(
+          (value) => value.id == item.distribuicaoId,
+        );
+        final atual = CaminhoTrilha.fromResponse(response, trilha).licaoAtual;
+        if (atual != null) {
+          setState(() {
+            _proximaLicao = ProximaLicao(
+              trilha: trilha,
+              titulo: atual.titulo,
+              mensagemMascote: 'Sua próxima etapa está pronta.',
+            );
+          });
+        }
+        return;
+      } on ApiError {
+        // O catálogo permanece disponível mesmo sem o destaque da home.
       }
     }
   }
@@ -136,7 +180,9 @@ class _AlunoNavegacaoPageState extends State<AlunoNavegacaoPage> {
     setState(() => _aba = AbaAluno.trilhas);
     _pilhaTrilhas
       ..popUntil((route) => route.isFirst)
-      ..push(_rotaCaminho(trilha));
+      ..push(
+        _conteudo == null ? _rotaCaminhoApi(trilha) : _rotaCaminho(trilha),
+      );
     if (abrirPratica) _pilhaTrilhas.push(_rotaPratica(trilha));
   }
 
@@ -157,16 +203,26 @@ class _AlunoNavegacaoPageState extends State<AlunoNavegacaoPage> {
   Route<void> _rotaCaminho(TrilhaResumo trilha) {
     return MaterialPageRoute(
       builder: (context) => CaminhoTrilhaPage(
-        aluno: _conteudo.aluno,
-        caminho: _conteudo.caminhoDe(trilha),
+        aluno: _aluno,
+        caminho: _conteudo!.caminhoDe(trilha),
         onSelecionarLicao: (_) =>
             Navigator.of(context).push(_rotaPratica(trilha)),
       ),
     );
   }
 
-  /// A API abre a prática pela distribuição; ao sair, o catálogo é recarregado
-  /// para refletir o progresso retornado pelo backend.
+  Route<void> _rotaCaminhoApi(TrilhaResumo trilha) {
+    return MaterialPageRoute(
+      builder: (_) => CaminhoTrilhaApiPage(
+        aluno: _aluno,
+        trilha: trilha,
+        catalogoService: _catalogoService,
+        aprendizagemService: _aprendizagemService,
+        onAtualizado: _carregarTrilhas,
+      ),
+    );
+  }
+
   Route<void> _rotaPratica(TrilhaResumo trilha) {
     final rota = MaterialPageRoute<void>(
       builder: (context) => SessaoPraticaPage(
@@ -198,19 +254,19 @@ class _AlunoNavegacaoPageState extends State<AlunoNavegacaoPage> {
           index: _aba.index,
           children: [
             AlunoHomePage(
-              aluno: _conteudo.aluno,
+              aluno: _aluno,
               trilhas: _trilhas,
               carregandoTrilhas: _carregandoTrilhas,
               erroTrilhas: _erroTrilhas,
               onTentarNovamente: _carregarTrilhas,
-              metaDiaria: _conteudo.metaDiaria,
-              proximaLicao: _conteudo.proximaLicao,
+              metaDiaria: _conteudo?.metaDiaria,
+              proximaLicao: _proximaLicao,
               onAbrirTrilha: _abrirTrilha,
               onVerTodas: () => _selecionarAba(AbaAluno.trilhas.index),
               onComecarProximaLicao: _comecarProximaLicao,
             ),
             AppPage(
-              header: AlunoHeader(aluno: _conteudo.aluno),
+              header: AlunoHeader(aluno: _aluno),
               body: const AppEmptyState(
                 title: 'Desempenho',
                 message: 'Em breve você poderá acompanhar seu desempenho aqui.',
@@ -220,7 +276,7 @@ class _AlunoNavegacaoPageState extends State<AlunoNavegacaoPage> {
               key: _trilhasNavigator,
               onGenerateRoute: (_) => MaterialPageRoute(
                 builder: (_) => CatalogoAlunoPage(
-                  aluno: _conteudo.aluno,
+                  aluno: _aluno,
                   trilhas: _trilhas,
                   carregando: _carregandoTrilhas,
                   erro: _erroTrilhas,
@@ -229,7 +285,12 @@ class _AlunoNavegacaoPageState extends State<AlunoNavegacaoPage> {
                 ),
               ),
             ),
-            PerfilPage(visaoGeral: _conteudo.visaoGeral),
+            _conteudo != null
+                ? PerfilPage(visaoGeral: _conteudo!.visaoGeral)
+                : PerfilContaPage(
+                    usuario: widget.usuario!,
+                    authSession: widget.authSession!,
+                  ),
           ],
         ),
       ),

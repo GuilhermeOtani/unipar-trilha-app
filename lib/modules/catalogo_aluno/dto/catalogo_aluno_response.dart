@@ -35,6 +35,10 @@ class DistribuicaoAlunoResponse {
     required this.totalDesafios,
     required this.percentualProgresso,
     required this.concluida,
+    required this.disponivelDe,
+    required this.prazoEncerrado,
+    this.sessaoId,
+    this.disponivelAte,
   });
 
   final int distribuicaoId;
@@ -46,10 +50,15 @@ class DistribuicaoAlunoResponse {
   /// Progresso de 0 a 100 calculado pelo backend.
   final int percentualProgresso;
   final bool concluida;
+  final int? sessaoId;
+  final DateTime disponivelDe;
+  final DateTime? disponivelAte;
+  final bool prazoEncerrado;
 
   factory DistribuicaoAlunoResponse.fromJson(Map<String, dynamic> json) {
     final concluida = json['concluida'];
-    if (concluida is! bool) {
+    final prazoEncerrado = json['prazoEncerrado'];
+    if (concluida is! bool || prazoEncerrado is! bool) {
       throw const FormatException(
         "Campo obrigatório 'concluida' ausente ou inválido.",
       );
@@ -62,6 +71,12 @@ class DistribuicaoAlunoResponse {
       totalDesafios: _requiredInt(json, 'totalDesafios'),
       percentualProgresso: _requiredInt(json, 'percentualProgresso'),
       concluida: concluida,
+      sessaoId: json['sessaoId'] is num
+          ? (json['sessaoId'] as num).toInt()
+          : null,
+      disponivelDe: _requiredDate(json, 'disponivelDe'),
+      disponivelAte: _nullableDate(json['disponivelAte']),
+      prazoEncerrado: prazoEncerrado,
     );
   }
 
@@ -75,5 +90,16 @@ class DistribuicaoAlunoResponse {
     final value = json[key];
     if (value is num) return value.toInt();
     throw FormatException("Campo obrigatório '$key' ausente ou inválido.");
+  }
+
+  static DateTime _requiredDate(Map<String, dynamic> json, String key) {
+    final value = _nullableDate(json[key]);
+    if (value != null) return value;
+    throw FormatException("Campo obrigatório '$key' ausente ou inválido.");
+  }
+
+  static DateTime? _nullableDate(Object? value) {
+    if (value == null) return null;
+    return value is String ? DateTime.tryParse(value) : null;
   }
 }

@@ -13,6 +13,7 @@ class ProfileHeader extends StatelessWidget {
     super.key,
     required this.name,
     this.registration,
+    this.registrationLabel = 'RA',
     this.avatar,
     this.trailing,
   });
@@ -23,6 +24,7 @@ class ProfileHeader extends StatelessWidget {
 
   /// RA do aluno; exibido como `RA: valor`.
   final String? registration;
+  final String registrationLabel;
   final ImageProvider? avatar;
   final Widget? trailing;
 
@@ -67,7 +69,7 @@ class ProfileHeader extends StatelessWidget {
                 ),
                 if (registration != null)
                   Text(
-                    'RA: $registration',
+                    '$registrationLabel: $registration',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: textTheme.bodyLarge?.copyWith(

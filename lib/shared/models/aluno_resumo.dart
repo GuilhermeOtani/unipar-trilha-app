@@ -3,12 +3,14 @@ class AlunoResumo {
   const AlunoResumo({
     required this.nome,
     required this.ra,
+    this.rotuloIdentificacao = 'RA',
     this.fotoUrl,
     this.sequenciaDias,
   });
 
   final String nome;
   final String ra;
+  final String rotuloIdentificacao;
 
   /// Endereço da foto. Nulo exibe as iniciais.
   final String? fotoUrl;

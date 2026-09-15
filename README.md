@@ -1,31 +1,36 @@
 # Unipar Trilha App
 
-Frontend Flutter do **Trail Code**, organizado pelo mesmo padrão modular do GulaPay e adaptado ao domínio, ao design system e aos contratos reais deste projeto.
+Frontend Flutter do **Trail Code**, organizado por módulos e integrado à API Spring Boot do projeto.
 
-Esta entrega reúne a fundação técnica, a jornada visual de login, o design system (FE-002) e as telas do aluno dos wireframes (home, catálogo, caminho, prática e perfil). Catálogo e prática já consomem os contratos do backend por services. O cadastro, a home do professor, a autoria e o acompanhamento permanecem fora do escopo.
+O aplicativo entrega o ciclo principal:
+
+```text
+Administrador gerencia usuários
+→ professor cria, edita, publica e distribui uma trilha
+→ aluno encontra, pratica, retoma e conclui
+→ professor acompanha os indicadores da turma
+```
 
 ## Estado da implementação
 
-| Item | Entrega | Estado |
+| Área | Entrega | Estado |
 |---|---|---|
-| 1.1 | Projeto Android/Web, estrutura modular e configuração | concluído |
-| 1.2 | Cliente HTTP, health, DTO, service e tela de login | concluído em código |
-| 1.3 | Persistência, `AuthGate`, restauração, invalidação e logout | concluído com página temporária |
-| FE-002 | Design system: tokens, tema, ativos e widgets compartilhados | concluído |
-| Telas do aluno | Home, catálogo, caminho, prática e perfil (wireframes 1–7) | layout pronto, visível em `main_preview.dart` |
-| 3.2 / 4.1–4.3 técnico | DTOs e services de catálogo e aprendizagem, estados de carregamento/erro | concluído sem aceite integrado |
-| Cadastro | Não faz parte desta entrega | fora do escopo |
-| Módulos restantes | Autoria, distribuição, painel e home do professor | não iniciado |
+| Autenticação | login, sessão persistida, restauração, Bearer, `401` global e logout | concluído |
+| Roteamento por perfil | áreas de `ALUNO`, `PROFESSOR` e `ADMINISTRADOR` | concluído |
+| Aluno | home, catálogo, caminho, prática, retomada, conclusão, desempenho vazio e perfil | concluído |
+| Professor | contexto, rascunhos, editor em três passos, publicação, distribuição e indicadores | concluído |
+| Administrador | listagem filtrável e criação de usuários | concluído |
+| Design system | tokens, tema, assets e widgets compartilhados responsivos | concluído |
+| Preview | demonstração visual isolada em `main_preview.dart` | mantido, fora da produção |
 
-A tela utiliza a API real em produção. A validação automatizada usa serviços simulados somente em `test/`; a execução opcional contra o backend real permanece pendente quando a API local não estiver ligada.
+`main.dart` não importa mocks. Os dados simulados permanecem exclusivamente no preview e nos testes automatizados.
 
 ## Tecnologias
 
-- Flutter 3.41.2 utilizado na criação.
-- Dart compatível com `^3.9.2`.
-- `dio` para HTTP.
-- `shared_preferences` para dados locais da sessão.
-- `font_awesome_flutter` e `cupertino_icons` disponíveis para os próximos módulos; o login usa Material Icons para renderização consistente em Web e Android.
+- Flutter 3.41.2 e Dart compatível com `^3.9.2`.
+- `dio` para comunicação HTTP.
+- `shared_preferences` para persistência da sessão.
+- `cupertino_icons` e `font_awesome_flutter` disponíveis; as novas jornadas priorizam Material Icons e os assets existentes.
 - `flutter_test` e `flutter_lints` para qualidade.
 
 ## Estrutura
@@ -33,57 +38,64 @@ A tela utiliza a API real em produção. A validação automatizada usa serviço
 ```text
 lib/
 ├── main.dart
+├── main_preview.dart
 ├── core/
 │   ├── api_client.dart
 │   ├── api_error.dart
+│   ├── auth_gate.dart
 │   ├── auth_session.dart
 │   ├── constants_api.dart
-│   ├── health_service.dart
-│   ├── theme/          # tokens e ThemeData (FE-002)
-│   └── widgets/        # componentes visuais compartilhados
+│   ├── theme/
+│   └── widgets/
 ├── modules/
 │   ├── login/
-│   │   ├── dto/
-│   │   ├── page/
-│   │   └── service/
-│   ├── home/page/session_placeholder_page.dart
+│   ├── home/
 │   ├── trilha/
 │   ├── distribuicao/
 │   ├── catalogo_aluno/
 │   ├── aprendizagem/
 │   ├── acompanhamento/
-│   └── perfil/                  # tela 7 (FE-002)
-├── shared/
-│   ├── models/ e widgets/       # cabeçalho do aluno usado por várias telas
-│   └── preview/                 # conteúdo de exemplo das telas
-└── main_preview.dart            # pré-visualização das telas 1–7
-
-assets/images/                   # ícones, ilustrações e mascote do kit
-assets/fonts/                    # fontes OFL usadas pelo design system
+│   ├── usuarios/
+│   └── perfil/
+└── shared/
+    ├── models/
+    ├── preview/
+    └── widgets/
 ```
 
-Pastas vazias possuem `.gitkeep`. Os módulos de negócio foram apenas reservados; nenhum contrato foi antecipado neles.
+Cada módulo separa, quando necessário, `dto`, `service`, `page`, `models` e `widgets`. Os services possuem contratos injetáveis para testes sem substituir a implementação HTTP de produção.
 
-## Tela de login
+## Jornadas autenticadas
 
-O `MaterialApp` inicia em um `AuthGate`, que decide entre carregamento, login e sessão autenticada. A tela de login possui:
+### Aluno
 
-- campos obrigatórios de login e senha, sem credenciais fixas;
-- envio pelo botão ou pela tecla Enter;
-- controle para mostrar e ocultar a senha;
-- bloqueio de múltiplos envios e indicador de carregamento;
-- mensagens para credenciais inválidas, timeout, indisponibilidade e falha de restauração;
-- preservação dos campos após erro;
-- layout empilhado em celular e lado a lado em desktop;
-- suporte aos perfis `ADMINISTRADOR`, `PROFESSOR` e `ALUNO`.
+- A identidade vem de `/usuarios/me`; o `login` é exibido como identificação e não como RA.
+- Catálogo, progresso e caminho usam somente dados da API.
+- A primeira lição incompleta é a atual; as posteriores permanecem bloqueadas.
+- A sessão só é aberta ao iniciar a lição.
+- Catálogo e caminho são recarregados após prática e conclusão.
+- Meta diária, sequência, XP, pontos, ranking, turma e professores ficam ocultos por não possuírem contrato real.
+- “Desempenho” permanece como estado vazio.
 
-Após autenticar, uma página propositalmente temporária apresenta nome, perfil e o botão **Sair**. Ela será substituída pelas homes específicas sem alterar o contrato de autenticação.
+### Professor
 
-Os componentes `AppTextField`, `AppPrimaryButton`, `AppMessageBanner` e `AuthShell` ficam em `core/widgets` para reutilização e usam os tokens do design system. O mascote do login é `assets/images/mascot/iguana-phone.png`; “Trail Code” é texto, não uma logo inventada. O mapa completo de tokens, ativos e componentes está em [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md).
+- Home com contexto acadêmico e navegação para trilhas, distribuição, acompanhamento e perfil.
+- Listagem e retomada dos próprios rascunhos.
+- Editor em três passos: dados básicos; árvore de módulos/lições/desafios/opções; revisão e publicação.
+- Validação de ao menos um módulo, uma lição e um desafio, duas opções e exatamente uma correta.
+- Distribuição seleciona versão publicada e turma do contexto, sem pedir IDs manualmente.
+- Painel usa os indicadores calculados pelo backend.
+
+### Administrador
+
+- Lista os três perfis por `/usuarios?perfil=` e permite filtro local.
+- Cria usuário com login, nome, senha e perfil por `POST /usuarios`.
+- A senha é limpa após o sucesso e nunca é persistida.
+- Não existe cadastro público.
 
 ## Comunicação com a API
 
-A URL é definida em compilação:
+A URL é definida em compilação e não recebe o prefixo `/api`:
 
 ```dart
 const String.fromEnvironment(
@@ -92,41 +104,33 @@ const String.fromEnvironment(
 );
 ```
 
-Não acrescentar `/api`. O cliente possui timeout de 15 segundos, envia e recebe JSON, injeta `Authorization: Bearer <token>` somente em rotas protegidas e nunca repete POST automaticamente.
+O Dio compartilhado usa timeouts de 15 segundos, envia Bearer apenas em rotas protegidas, não repete POST automaticamente e não registra token ou senha. `ApiError` interpreta Problem Details RFC 7807, inclusive `detail`, `errors`, timeout, indisponibilidade e respostas não JSON.
 
-`ApiError` interpreta o Problem Details RFC 7807 do backend, incluindo `detail` e `errors`. Também diferencia timeout e falha de conexão.
-
-Rotas implementadas na fundação:
-
-| Método | Rota | Responsabilidade |
+| Método | Rota | Uso |
 |---|---|---|
-| `GET` | `/actuator/health` | confirma `status=UP` |
-| `POST` | `/auth/login` | autentica e persiste a sessão |
-| `GET` | `/usuarios/me` | valida uma sessão restaurada |
-| `GET` | `/aluno/distribuicoes` | catálogo do aluno (`CatalogoAlunoService`) |
-| `POST` | `/aluno/distribuicoes/{id}/sessoes` | inicia ou retoma a prática (`AprendizagemService`) |
-| `GET` | `/aluno/sessoes/{id}` | consulta a sessão (`AprendizagemService`) |
-| `POST` | `/aluno/sessoes/{id}/respostas` | envia a resposta (`AprendizagemService`) |
+| `GET` | `/actuator/health` | disponibilidade da API |
+| `POST` | `/auth/login` | autenticação |
+| `GET` | `/usuarios/me` | restauração e identidade |
+| `GET/POST` | `/usuarios?perfil=` e `/usuarios` | gestão administrativa |
+| `GET` | `/professor/contexto` | turmas e disciplinas do professor |
+| `GET/POST` | `/trilhas` | listar e criar rascunhos |
+| `GET/PUT` | `/trilhas/{id}` | carregar e salvar a árvore |
+| `POST` | `/trilhas/{id}/publicacoes` | publicar snapshot |
+| `GET/POST` | `/distribuicoes?turmaId=` e `/distribuicoes` | histórico e nova distribuição |
+| `GET` | `/aluno/distribuicoes` | catálogo e progresso |
+| `GET` | `/aluno/distribuicoes/{id}/caminho` | módulos e lições ordenados |
+| `POST` | `/aluno/distribuicoes/{id}/sessoes` | iniciar ou retomar |
+| `GET` | `/aluno/sessoes/{id}` | recuperar sessão |
+| `POST` | `/aluno/sessoes/{id}/respostas` | responder desafio |
+| `GET` | `/professor/turmas/{id}/indicadores` | acompanhamento |
 
-O token não é enviado no health ou no login. A senha é enviada apenas ao endpoint de login e nunca é persistida.
+## Sessão e segurança
 
-## Sessão
+`AuthSession` é a fonte única da autenticação. Ele armazena token e identificação do usuário, valida dados restaurados consultando `/usuarios/me`, invalida uma sessão uma única vez em `401` protegido e impede respostas atrasadas de restaurarem uma sessão encerrada. A senha nunca é armazenada e o JWT não é decodificado localmente para autorizar telas.
 
-`AuthSession` é a fonte única do estado de autenticação:
-
-- armazena token, ID, login, nome, perfil e situação ativa;
-- reconhece `ADMINISTRADOR`, `PROFESSOR` e `ALUNO`;
-- valida dados salvos consultando `/usuarios/me`;
-- limpa a sessão em `401` de rota protegida;
-- mantém os dados salvos, mas não libera estado autenticado, quando a validação falha por rede;
-- impede resposta atrasada de restaurar dados depois do logout;
-- notifica futuros consumidores por `ChangeNotifier`.
-
-O frontend não decodifica o JWT para decidir se uma sessão é válida.
+O `AuthGate` direciona cada perfil para sua área. O logout limpa a sessão e retorna ao login sem empilhar uma rota autenticada.
 
 ## Como executar
-
-Na raiz deste projeto:
 
 ```powershell
 flutter pub get
@@ -134,7 +138,7 @@ flutter analyze
 flutter test
 ```
 
-Web com backend na mesma máquina:
+Web, com a API na mesma máquina:
 
 ```powershell
 flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8080
@@ -146,13 +150,21 @@ Emulador Android padrão:
 flutter run -d <ID_DO_EMULADOR> --dart-define=API_BASE_URL=http://10.0.2.2:8080
 ```
 
-Aparelho físico: use o IPv4 da máquina na mesma rede, por exemplo `http://192.168.0.10:8080`, e permita a porta no firewall. `localhost` no aparelho aponta para o próprio celular.
+Em aparelho físico, use o IPv4 da máquina na mesma rede, por exemplo `http://192.168.0.10:8080`, e libere a porta no firewall. `localhost` no aparelho aponta para o próprio celular.
 
-O Android possui permissão de internet em todos os builds. Tráfego HTTP sem TLS é permitido somente no manifesto `debug`; a configuração de produção deverá utilizar HTTPS. No Web, o backend precisa permitir a origem usada pelo navegador via CORS.
+HTTP local é permitido apenas no manifesto Android de debug; produção deve usar HTTPS. No Web, o backend deve permitir a origem do navegador via CORS.
+
+## Preview visual
+
+O preview continua disponível para demonstrar estados visuais sem backend:
+
+```powershell
+flutter run -d chrome -t lib/main_preview.dart
+```
+
+`main_preview.dart` e `AlunoPreviewApi` não são importados por `main.dart`.
 
 ## Teste opcional com backend real
-
-Com a API em execução, informe credenciais somente no comando:
 
 ```powershell
 flutter test test/integration/backend_integration_test.dart `
@@ -162,34 +174,23 @@ flutter test test/integration/backend_integration_test.dart `
   --dart-define=BACKEND_TEST_PASSWORD=<SENHA>
 ```
 
-O teste executa health → login → `/usuarios/me` → logout. Sem essas opções ele fica ignorado, portanto a suíte comum não depende de PostgreSQL nem de uma API ligada.
-
-## Decisões e próximos passos
-
-- **FE-001:** adaptado conforme solicitado; o aplicativo inicia na jornada de autenticação, sem página técnica nem cadastro.
-- **FE-002:** concluído com tokens, tema, ativos e componentes compartilhados; o login foi integrado a esse design system.
-- **FE-003:** login, estados de erro e integração de produção estão implementados. A execução contra a API real segue pendente nesta validação porque o backend local estava desligado.
-- **FE-004:** parcialmente realizado pelo `AuthGate`, restauração, logout e página provisória. As telas do aluno existem em pré-visualização, mas a navegação autenticada por perfil ainda será ligada em incremento posterior.
-- A única simulação em `lib/` é `shared/preview/aluno_preview_api.dart`, usada apenas por `main_preview.dart` e testes. Não foram adicionadas dependências extras nem regras comerciais do GulaPay.
-- O plano original está em `PLANO_IMPLEMENTACAO_FRONTEND.md` neste repositório.
-- O próximo incremento deve substituir a página provisória pelas homes por perfil, preservando o `AuthGate`.
-- Para reencontrar rascunhos e versões em qualquer dispositivo, a decisão FE-005 adotada exige endpoints autenticados adicionais no backend. Essa alteração permanece separada desta fundação.
-- Não houve alteração no backend, commit ou push durante esta entrega.
+Sem as opções, esse teste é ignorado e a suíte comum não depende de uma API ligada.
 
 ## Validação realizada em 14/09/2026
 
 ```text
+Backend: 24 testes, 0 falhas
 flutter analyze: No issues found
-flutter test: 39 testes passaram e 1 integração opcional foi ignorada
+flutter test: 123 passaram, 1 integração opcional ignorada
 flutter build web --debug: concluído
 flutter build apk --debug: concluído
 ```
 
-A inspeção visual foi feita em desktop e em viewport de 360 × 800 px, sem overflow. O teste opcional com a API real não foi executado porque `localhost:8080` não estava disponível.
+Foram cobertos roteamento dos três perfis, DTOs/services, autenticação, Problem Details, editor e bloqueio de POST duplicado, gestão administrativa, catálogo, prática, retomada, conclusão e layouts de 360 px e desktop, incluindo a distribuição do professor.
 
-Artefatos locais gerados para conferência:
+Artefatos locais:
 
 - `build/web/`;
 - `build/app/outputs/flutter-apk/app-debug.apk`.
 
-As pastas de build são temporárias e já estão ignoradas pelo Git. Não havia emulador ou aparelho Android conectado, portanto o APK foi compilado, mas não executado em dispositivo nesta validação.
+As pastas de build são temporárias e ignoradas pelo Git. Não houve commit nem push nesta entrega. O plano sincronizado está em `PLANO_IMPLEMENTACAO_FRONTEND.md`.

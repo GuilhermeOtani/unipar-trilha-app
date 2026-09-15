@@ -6,23 +6,35 @@ import 'package:unipar_trilha_app/modules/aprendizagem/dto/resposta_aluno_reques
 import 'package:unipar_trilha_app/modules/aprendizagem/dto/resposta_aluno_response.dart';
 import 'package:unipar_trilha_app/modules/aprendizagem/dto/sessao_response.dart';
 
-class AprendizagemService {
+abstract interface class AprendizagemServiceContract {
+  Future<SessaoResponse> iniciarOuRetomar(int distribuicaoId);
+  Future<SessaoResponse> buscarSessao(int sessaoId);
+  Future<RespostaAlunoResponse> responder(
+    int sessaoId,
+    RespostaAlunoRequest request,
+  );
+}
+
+class AprendizagemService implements AprendizagemServiceContract {
   AprendizagemService({Dio? dio}) : _dio = dio ?? ApiClient.shared.dio;
 
   final Dio _dio;
 
   /// Cria a sessão da distribuição ou devolve a que já está em andamento.
+  @override
   Future<SessaoResponse> iniciarOuRetomar(int distribuicaoId) {
     return _sessao(
       () => _dio.post<Object?>(ConstantsApi.alunoIniciarSessao(distribuicaoId)),
     );
   }
 
+  @override
   Future<SessaoResponse> buscarSessao(int sessaoId) {
     return _sessao(() => _dio.get<Object?>(ConstantsApi.alunoSessao(sessaoId)));
   }
 
   /// Envia a resposta uma única vez; timeouts não são repetidos.
+  @override
   Future<RespostaAlunoResponse> responder(
     int sessaoId,
     RespostaAlunoRequest request,

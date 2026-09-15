@@ -14,6 +14,12 @@ Professor cria e publica uma trilha
 
 Este arquivo usa exatamente as mesmas etapas do `PLANO_IMPLEMENTACAO_BACKEND.md`. A conclusão de uma etapa exige integração com o backend real e regressão das etapas anteriores.
 
+### Estado em 14/09/2026
+
+As jornadas de aluno, professor e administrador foram conectadas aos services HTTP de produção. O `AuthGate` direciona por perfil, o editor do professor possui três passos, catálogo/caminho/prática usam dados da API e a gestão administrativa cria e lista usuários. `main_preview.dart` e `AlunoPreviewApi` permanecem isolados e não são importados por `main.dart`.
+
+Validação atual: `flutter analyze` sem problemas, 123 testes aprovados, um teste externo opcional ignorado, build Web de debug e APK de debug gerados.
+
 ## 2. Regra central de conclusão
 
 Uma tela pronta com dados fixos não conclui uma etapa.
@@ -153,12 +159,15 @@ flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8080
 | `POST /auth/login` | `LoginService` | login |
 | `GET /usuarios/me` | `LoginService`/`AuthSession` | inicialização |
 | `GET /professor/contexto` | `ProfessorContextoService` | home do professor |
+| `GET /trilhas` | `TrilhaService` | rascunhos e publicações do professor |
 | `POST /trilhas` | `TrilhaService` | início do editor |
 | `GET /trilhas/{id}` | `TrilhaService` | edição |
 | `PUT /trilhas/{id}` | `TrilhaService` | salvar árvore |
 | `POST /trilhas/{id}/publicacoes` | `TrilhaService` | publicação |
 | `POST /distribuicoes` | `DistribuicaoService` | distribuição |
+| `GET /distribuicoes?turmaId={id}` | `DistribuicaoService` | histórico da turma |
 | `GET /aluno/distribuicoes` | `CatalogoAlunoService` | home do aluno |
+| `GET /aluno/distribuicoes/{id}/caminho` | `CatalogoAlunoService` | módulos e lições |
 | `POST /aluno/distribuicoes/{id}/sessoes` | `AprendizagemService` | começar/continuar |
 | `GET /aluno/sessoes/{id}` | `AprendizagemService` | retomada |
 | `POST /aluno/sessoes/{id}/respostas` | `AprendizagemService` | responder |
@@ -458,6 +467,8 @@ Criar módulo `catalogo_aluno` com:
 
 - DTOs e `CatalogoAlunoService`;
 - cards com título, disciplina, versão, quantidade de desafios e progresso;
+- `sessaoId`, datas de disponibilidade e indicação de prazo encerrado;
+- caminho ordenado com a primeira lição incompleta como atual;
 - botão “Começar”, “Continuar” ou “Concluída” conforme estado;
 - atualização manual, loading, vazio e retry.
 
@@ -478,6 +489,8 @@ Criar módulo `aprendizagem` com:
 - página de prática com título, lição, barra de progresso, enunciado e opções;
 - navegação a partir do card do catálogo;
 - retry sem navegação duplicada.
+- retomada de sessão existente depois do prazo e tratamento de `409` para nova sessão vencida;
+- bloqueio amigável de sessão incompleta quando a distribuição estiver inativa.
 
 O DTO `OpcaoAluno` possui apenas `id` e `texto`.
 
@@ -565,8 +578,8 @@ Executar `flutter analyze` e `flutter test`. Testar larguras de 360, 768 e 1366 
 **Responsável:** F1.
 
 - Confirmar `API_BASE_URL` por `dart-define`.
-- Executar `flutter build apk --release`.
-- Executar `flutter build web`.
+- Executar `flutter build apk --debug` para o artefato de validação.
+- Executar `flutter build web --debug`.
 - Confirmar que nenhum `MockService` está ativo.
 - Testar o APK e o build Web contra a mesma API.
 - Congelar funcionalidades; corrigir apenas bloqueadores.
@@ -595,6 +608,4 @@ anteriores, não adicione Riverpod/GoRouter e não altere contratos sem informar
 Execute flutter analyze e flutter test e relate arquivos, comandos, resultados
 e o aceite integrado ainda pendente.
 ```
-
-
 

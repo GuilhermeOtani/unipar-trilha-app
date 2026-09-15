@@ -21,6 +21,11 @@ class TrilhaCard extends StatelessWidget {
       tone: trilha.tom,
       hasNotification: trilha.temNotificacao,
       leading: IconeTrilhaView(icone: trilha.icone),
+      subtitle: [
+        if (trilha.numeroVersao != null) 'Versão ${trilha.numeroVersao}',
+        '${(trilha.progresso * 100).round()}% concluído',
+        if (trilha.prazoEncerrado) 'prazo encerrado',
+      ].join(' • '),
       onAction: () => onAbrir(trilha),
     );
   }

@@ -21,6 +21,8 @@ class AppTextField extends StatefulWidget {
     this.validator,
     this.onChanged,
     this.onSubmitted,
+    this.maxLines = 1,
+    this.minLines,
   });
 
   final String label;
@@ -37,6 +39,8 @@ class AppTextField extends StatefulWidget {
   final FormFieldValidator<String>? validator;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
+  final int? maxLines;
+  final int? minLines;
 
   @override
   State<AppTextField> createState() => _AppTextFieldState();
@@ -51,6 +55,8 @@ class _AppTextFieldState extends State<AppTextField> {
       controller: widget.controller,
       enabled: widget.enabled,
       obscureText: _obscured,
+      maxLines: widget.obscureText ? 1 : widget.maxLines,
+      minLines: widget.obscureText ? 1 : widget.minLines,
       enableSuggestions: !widget.obscureText,
       autocorrect: !widget.obscureText,
       keyboardType: widget.keyboardType,

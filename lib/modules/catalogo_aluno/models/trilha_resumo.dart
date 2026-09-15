@@ -17,6 +17,9 @@ class TrilhaResumo {
     this.tom = TrailCardTone.blue,
     this.icone = IconeTrilha.livro,
     this.temNotificacao = false,
+    this.numeroVersao,
+    this.sessaoId,
+    this.prazoEncerrado = false,
   });
 
   /// Converte um item de `GET /aluno/distribuicoes`.
@@ -40,6 +43,9 @@ class TrilhaResumo {
           : TrailStatus.notStarted,
       tom: _tons[indice % _tons.length],
       icone: _icones[indice % _icones.length],
+      numeroVersao: item.numeroVersao,
+      sessaoId: item.sessaoId,
+      prazoEncerrado: item.prazoEncerrado,
     );
   }
 
@@ -66,4 +72,7 @@ class TrilhaResumo {
 
   /// Exibe o sino de novidade no card (ainda sem campo no contrato).
   final bool temNotificacao;
+  final int? numeroVersao;
+  final int? sessaoId;
+  final bool prazoEncerrado;
 }

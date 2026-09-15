@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:unipar_trilha_app/core/auth_session.dart';
-import 'package:unipar_trilha_app/modules/home/page/session_placeholder_page.dart';
+import 'package:unipar_trilha_app/modules/home/page/aluno_navegacao_page.dart';
+import 'package:unipar_trilha_app/modules/home/page/professor_navegacao_page.dart';
+import 'package:unipar_trilha_app/modules/login/dto/perfil_usuario.dart';
 import 'package:unipar_trilha_app/modules/login/page/login_page.dart';
 import 'package:unipar_trilha_app/modules/login/service/login_service.dart';
+import 'package:unipar_trilha_app/modules/usuarios/page/administrador_home_page.dart';
 
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key, this.authSession, this.loginService});
@@ -49,9 +52,7 @@ class _AuthGateState extends State<AuthGate> {
     }
 
     return switch (_authSession.state.status) {
-      AuthSessionStatus.autenticada => SessionPlaceholderPage(
-        authSession: _authSession,
-      ),
+      AuthSessionStatus.autenticada => _areaAutenticada(),
       AuthSessionStatus.naoValidada => LoginPage(
         service: widget.loginService,
         sessionMessage: _authSession.state.message,
@@ -59,6 +60,24 @@ class _AuthGateState extends State<AuthGate> {
       ),
       AuthSessionStatus.semSessao => LoginPage(service: widget.loginService),
       AuthSessionStatus.validando => const _SessionLoadingPage(),
+    };
+  }
+
+  Widget _areaAutenticada() {
+    final usuario = _authSession.state.usuario!;
+    return switch (usuario.perfil) {
+      PerfilUsuario.aluno => AlunoNavegacaoPage(
+        usuario: usuario,
+        authSession: _authSession,
+      ),
+      PerfilUsuario.professor => ProfessorNavegacaoPage(
+        usuario: usuario,
+        authSession: _authSession,
+      ),
+      PerfilUsuario.administrador => AdministradorHomePage(
+        usuario: usuario,
+        authSession: _authSession,
+      ),
     };
   }
 }

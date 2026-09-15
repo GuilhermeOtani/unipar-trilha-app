@@ -24,14 +24,14 @@ class SessaoPraticaPage extends StatefulWidget {
 
   final int distribuicaoId;
   final VoidCallback onVoltar;
-  final AprendizagemService? service;
+  final AprendizagemServiceContract? service;
 
   @override
   State<SessaoPraticaPage> createState() => _SessaoPraticaPageState();
 }
 
 class _SessaoPraticaPageState extends State<SessaoPraticaPage> {
-  late final AprendizagemService _service =
+  late final AprendizagemServiceContract _service =
       widget.service ?? AprendizagemService();
 
   int? _sessaoId;
