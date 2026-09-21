@@ -9,6 +9,7 @@ class AppTextField extends StatefulWidget {
     super.key,
     required this.label,
     this.controller,
+    this.initialValue,
     this.hint,
     this.helperText,
     this.errorText,
@@ -27,6 +28,7 @@ class AppTextField extends StatefulWidget {
 
   final String label;
   final TextEditingController? controller;
+  final String? initialValue;
   final String? hint;
   final String? helperText;
   final String? errorText;
@@ -53,6 +55,7 @@ class _AppTextFieldState extends State<AppTextField> {
   Widget build(BuildContext context) {
     return TextFormField(
       controller: widget.controller,
+      initialValue: widget.initialValue,
       enabled: widget.enabled,
       obscureText: _obscured,
       maxLines: widget.obscureText ? 1 : widget.maxLines,

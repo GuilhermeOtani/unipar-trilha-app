@@ -36,6 +36,7 @@ class ProfessorNavegacaoPage extends StatefulWidget {
 }
 
 class _ProfessorNavegacaoPageState extends State<ProfessorNavegacaoPage> {
+  final _trilhasNavigator = GlobalKey<NavigatorState>();
   late final ProfessorContextoServiceContract _contextoService =
       widget.contextoService ?? ProfessorContextoService();
   late final TrilhaServiceContract _trilhaService =
@@ -121,12 +122,21 @@ class _ProfessorNavegacaoPageState extends State<ProfessorNavegacaoPage> {
             contexto: contexto,
             trilhas: _trilhas,
           ),
-          TrilhasProfessorPage(
-            usuario: widget.usuario,
-            contexto: contexto,
-            trilhas: _trilhas,
-            service: _trilhaService,
-            onAtualizar: _carregar,
+          NavigatorPopHandler<bool>(
+            enabled: _aba == 1,
+            onPopWithResult: (_) => _trilhasNavigator.currentState?.maybePop(),
+            child: Navigator(
+              key: _trilhasNavigator,
+              onGenerateRoute: (_) => MaterialPageRoute<void>(
+                builder: (_) => TrilhasProfessorPage(
+                  usuario: widget.usuario,
+                  contexto: contexto,
+                  trilhas: _trilhas,
+                  service: _trilhaService,
+                  onAtualizar: _carregar,
+                ),
+              ),
+            ),
           ),
           DistribuicoesProfessorPage(
             usuario: widget.usuario,

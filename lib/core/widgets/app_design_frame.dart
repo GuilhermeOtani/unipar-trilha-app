@@ -39,10 +39,19 @@ abstract final class AppDesignScale {
 /// - `scrollable: false`: o canvas tem exatamente a altura da área visível.
 ///   Use `Expanded` com rolagem interna (ex.: lista da tela 3).
 class AppDesignPage extends StatelessWidget {
-  const AppDesignPage({super.key, required this.child, this.scrollable = true});
+  const AppDesignPage({
+    super.key,
+    required this.child,
+    this.scrollable = true,
+    this.fillViewport = true,
+  });
 
   final Widget child;
   final bool scrollable;
+
+  /// Desative em formulários dinâmicos, que medem sua altura naturalmente
+  /// e não usam Spacer/Expanded para ocupar a altura restante da tela.
+  final bool fillViewport;
 
   @override
   Widget build(BuildContext context) {
@@ -59,10 +68,12 @@ class AppDesignPage extends StatelessWidget {
                 : AppDesignScale.designHeight;
 
             final Widget canvas = scrollable
-                ? ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: visibleHeight),
-                    child: IntrinsicHeight(child: child),
-                  )
+                ? fillViewport
+                      ? ConstrainedBox(
+                          constraints: BoxConstraints(minHeight: visibleHeight),
+                          child: IntrinsicHeight(child: child),
+                        )
+                      : child
                 : SizedBox(height: visibleHeight, child: child);
 
             final frame = Align(
