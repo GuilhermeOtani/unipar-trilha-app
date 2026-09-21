@@ -20,6 +20,8 @@ As jornadas de aluno, professor e administrador foram conectadas aos services HT
 
 Validação atual: `flutter analyze` sem problemas, 123 testes aprovados, um teste externo opcional ignorado, build Web de debug e APK de debug gerados.
 
+O aceite manual do ciclo inteiro em dispositivo/navegador com PostgreSQL real continua pendente e será feito pela equipe; os testes automatizados não o substituem.
+
 ## 2. Regra central de conclusão
 
 Uma tela pronta com dados fixos não conclui uma etapa.
@@ -608,4 +610,3 @@ anteriores, não adicione Riverpod/GoRouter e não altere contratos sem informar
 Execute flutter analyze e flutter test e relate arquivos, comandos, resultados
 e o aceite integrado ainda pendente.
 ```
-

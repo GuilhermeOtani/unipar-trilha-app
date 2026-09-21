@@ -193,4 +193,17 @@ Artefatos locais:
 - `build/web/`;
 - `build/app/outputs/flutter-apk/app-debug.apk`.
 
-As pastas de build são temporárias e ignoradas pelo Git. Não houve commit nem push nesta entrega. O plano sincronizado está em `PLANO_IMPLEMENTACAO_FRONTEND.md`.
+As pastas de build são temporárias e ignoradas pelo Git. O plano sincronizado está em `PLANO_IMPLEMENTACAO_FRONTEND.md`. O Codex não criou commit nem fez push; os commits existentes foram feitos pelo usuário.
+
+## Aceite manual pela equipe
+
+A implementação e os testes automatizados estão prontos, mas o **aceite visual e funcional do ciclo inteiro em Web/Android com PostgreSQL real permanece para a equipe**. O teste optativo já confirmou health → login → `/usuarios/me` → logout na API local; ele não substitui o roteiro completo abaixo.
+
+1. Inicie o backend atualizado e este app com a `API_BASE_URL` adequada ao dispositivo.
+2. Entre como administrador, confira a lista por perfil e crie um usuário de teste. Isso valida a gestão; usuários novos não recebem matrícula/vínculo automaticamente.
+3. Entre com o professor de desenvolvimento vinculado à turma piloto. Crie um rascunho, salve um módulo com lição e desafio, feche/reabra, edite, publique V1 e distribua para a turma.
+4. Entre com o aluno de desenvolvimento matriculado. Confira catálogo e caminho, responda errado, depois certo, saia e entre novamente, retome e conclua.
+5. Entre novamente como professor e confira os indicadores. Edite o rascunho, publique V2 e confirme que a distribuição e as tentativas de V1 continuam identificadas como V1.
+6. Repita com uma nova trilha ou versão, sem limpar o banco. Verifique que uma sessão **iniciada antes** do prazo continua depois dele, mas uma sessão **nova após** o prazo recebe `409`. O bloqueio por `ativo=false` exige uma alteração controlada da distribuição no banco, pois não existe tela ou endpoint de desativação no MVP.
+
+Se aparecer uma divergência, registre perfil, tela, endpoint, status HTTP e o `detail` do Problem Details; isso permite corrigir o contrato sem perder o progresso do grupo.
